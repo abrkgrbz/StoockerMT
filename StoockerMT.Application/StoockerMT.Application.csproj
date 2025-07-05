@@ -7,15 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Common\Models\" />
-    <Folder Include="Common\Behaviors\" />
-    <Folder Include="Features\" />
-    <Folder Include="Modules\" />
+    <Folder Include="Features\Tenants\Commands\" />
+    <Folder Include="Features\Tenants\Queries\" />
+    <Folder Include="Features\Modules\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="15.0.0" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
     <PackageReference Include="FluentValidation" Version="12.0.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
     <PackageReference Include="MediatR" Version="13.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StoockerMT.Domain\StoockerMT.Domain.csproj" />
   </ItemGroup>
 
 </Project>
