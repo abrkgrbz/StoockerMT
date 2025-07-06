@@ -103,5 +103,10 @@ namespace StoockerMT.Persistence.Repositories.Common
         {
             throw new NotImplementedException();
         }
+
+        public IQueryable<T> GetQueryable()
+        {
+            return _dbSet.AsQueryable();
+        }
     }
 }

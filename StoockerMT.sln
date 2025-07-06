@@ -27,6 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{2D9193D5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{D7619B3F-DFBA-442A-943D-CF67CFF21966}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoockerMT.Identity", "StoockerMT.Identity\StoockerMT.Identity.csproj", "{A2DC44C9-618F-4578-920F-B4796AAB9F4E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{CA75F18A-06F8-4651-9C7F-9F865A17FDC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA75F18A-06F8-4651-9C7F-9F865A17FDC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA75F18A-06F8-4651-9C7F-9F865A17FDC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2DC44C9-618F-4578-920F-B4796AAB9F4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2DC44C9-618F-4578-920F-B4796AAB9F4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2DC44C9-618F-4578-920F-B4796AAB9F4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2DC44C9-618F-4578-920F-B4796AAB9F4E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,6 +73,7 @@ Global
 		{D5C52341-D928-4C0F-AB22-D3BEEEE6D67E} = {2DB274CA-C4B2-4616-80EA-C731BA297195}
 		{CA75F18A-06F8-4651-9C7F-9F865A17FDC0} = {BB52CDD8-04EA-48CE-979E-1F9897A73B44}
 		{D7619B3F-DFBA-442A-943D-CF67CFF21966} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A2DC44C9-618F-4578-920F-B4796AAB9F4E} = {2DB274CA-C4B2-4616-80EA-C731BA297195}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8898E050-B710-4B04-BB52-71B828FAFDC0}

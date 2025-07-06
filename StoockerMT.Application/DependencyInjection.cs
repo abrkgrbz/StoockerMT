@@ -23,7 +23,10 @@ namespace StoockerMT.Application
                 cfg.RegisterServicesFromAssembly(assembly);
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(TenantValidationBehaviour<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(CachingBehaviour<,>));
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehaviour<,>));
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ModuleAccessBehaviour<,>));
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PerformanceBehaviour<,>));
             });
 
             return services;

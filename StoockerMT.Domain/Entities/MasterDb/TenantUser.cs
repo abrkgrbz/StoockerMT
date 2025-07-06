@@ -26,6 +26,13 @@ namespace StoockerMT.Domain.Entities.MasterDb
         public string? UpdatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; } 
+        public DateTime? PasswordChangeDate { get; set; }
+        public DateTime? LastLoginDate { get; set; } 
+        public int FailedLoginAttempts { get; set; }
+        public bool IsLocked { get; private set; } = false;
+        public DateTime? LockedUntil { get; private set; }
 
         // Navigation Properties
         public virtual Tenant Tenant { get; set; }
@@ -51,6 +58,19 @@ namespace StoockerMT.Domain.Entities.MasterDb
             FirstName = firstName ?? throw new ArgumentNullException(nameof(firstName));
             LastName = lastName ?? throw new ArgumentNullException(nameof(lastName));
             PhoneNumber = phoneNumber;
+            UpdatedBy = updatedBy;
+            UpdateTimestamp();
+        }
+        public void UpdateLocked(string updatedBy, bool isLocked)
+        {
+            IsLocked = isLocked;
+            UpdatedBy = updatedBy;
+            UpdateTimestamp();
+        }
+
+        public void UpdateLockedUntil(string updatedBy, DateTime? lockedUntil)
+        {
+            LockedUntil = lockedUntil;
             UpdatedBy = updatedBy;
             UpdateTimestamp();
         }

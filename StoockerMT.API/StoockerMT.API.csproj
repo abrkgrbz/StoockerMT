@@ -21,9 +21,15 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+    <PackageReference Include="Swashbuckle" Version="5.6.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="9.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\StoockerMT.Identity\StoockerMT.Identity.csproj" />
+    <ProjectReference Include="..\StoockerMT.Infrastructure\StoockerMT.Infrastructure.csproj" />
     <ProjectReference Include="..\StoockerMT.Persistence\StoockerMT.Persistence.csproj" />
   </ItemGroup>
 

@@ -7,8 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using StoockerMT.Application.Common.Interfaces;
-using StoockerMT.Application.Common.Interfaces.Services;
+using StoockerMT.Application.Common.Interfaces; 
 using StoockerMT.Domain.Repositories.MasterDb;
 using StoockerMT.Domain.Repositories.TenantDb;
 using StoockerMT.Domain.Repositories.UnitOfWork;
@@ -23,7 +22,7 @@ namespace StoockerMT.Persistence
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
         { 
             services.AddHttpContextAccessor();
              

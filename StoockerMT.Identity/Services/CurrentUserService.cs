@@ -6,8 +6,9 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using static StoockerMT.Application.Features.Authentication.DTOs.AuthenticationDtos;
 
-namespace StoockerMT.Persistence.Services
+namespace StoockerMT.Identity.Services
 {
     public class CurrentUserService : ICurrentUserService
     {

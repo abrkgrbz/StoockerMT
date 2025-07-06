@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace StoockerMT.Persistence.Repositories.UnitOfWork
 {
-    public class TenantDbUnitOfWork : UnitOfWork, ITenantDbUnitOfWork
+    public class TenantDbUnitOfWork : Common.UnitOfWork, ITenantDbUnitOfWork
     {
         private readonly TenantDbContext _context;
 
