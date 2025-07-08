@@ -21,6 +21,7 @@ namespace StoockerMT.Identity.Extensions
     {
         public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddHttpContextAccessor();
             // Configuration
             var jwtSettings = new JwtSettings();
             configuration.GetSection(JwtSettings.SectionName).Bind(jwtSettings);

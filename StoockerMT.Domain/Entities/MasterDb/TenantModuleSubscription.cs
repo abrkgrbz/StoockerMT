@@ -61,7 +61,7 @@ namespace StoockerMT.Domain.Entities.MasterDb
             UpdatedBy = updatedBy;
             UpdateTimestamp();
         }
-
+         
         public void Renew(string updatedBy)
         {
             var newStartDate = SubscriptionPeriod.EndDate.AddDays(1);
@@ -107,6 +107,13 @@ namespace StoockerMT.Domain.Entities.MasterDb
         public Money GetEffectiveAmount()
         {
             return DiscountAmount != null ? Amount.Subtract(DiscountAmount) : Amount;
+        }
+
+        public bool IsWithinSubscriptionPeriod()
+        {
+            var now = DateTime.UtcNow;
+            return SubscriptionPeriod.StartDate <= now &&
+                   (SubscriptionPeriod.EndDate == null || SubscriptionPeriod.EndDate > now);
         }
     }
 }

@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace StoockerMT.Persistence.Migrations.TenantDb
+namespace StoockerMT.Persistence.Persistence.Migrations.TenantDb
 {
     /// <inheritdoc />
-    public partial class InitialTenantDbWithValueObjects : Migration
+    public partial class InitialTenantCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

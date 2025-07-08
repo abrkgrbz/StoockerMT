@@ -13,8 +13,7 @@ namespace StoockerMT.Persistence.Repositories.UnitOfWork
     public class MasterDbUnitOfWork : Common.UnitOfWork, IMasterDbUnitOfWork
     {
         private readonly MasterDbContext _context;
-
-        // Lazy initialization of repositories
+         
         private ITenantRepository? _tenants;
         private IModuleRepository? _modules;
         private ITenantUserRepository? _tenantUsers;

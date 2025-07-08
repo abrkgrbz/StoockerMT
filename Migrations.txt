@@ -1,0 +1,8 @@
+# 1. Package Manager Console'da default project: StoockerMT.Persistence
+
+# 2. Master DB Migration
+Add-Migration InitialMasterDbWithValueObjects -Context MasterDbContext -OutputDir Migrations/MasterDb
+Update-Database -Context MasterDbContext
+
+# 3. Tenant DB Migration (sadece oluþtur, apply etme)
+Add-Migration InitialTenantDbWithValueObjects -Context TenantDbContext -OutputDir Migrations/TenantDb

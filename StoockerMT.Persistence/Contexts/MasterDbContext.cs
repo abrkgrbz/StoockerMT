@@ -38,26 +38,20 @@ namespace StoockerMT.Persistence.Contexts
         {
             base.OnModelCreating(modelBuilder);
              
-            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly(), t => t.Namespace.Contains("MasterDb"));
+            modelBuilder.Ignore<DatabaseInfo>();
+            modelBuilder.Ignore<TenantSettings>();
+            modelBuilder.Ignore<TenantCode>();
              
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-            {
-                if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
-                {
-                    modelBuilder.Entity(entityType.ClrType).HasQueryFilter(
-                        Expression.Lambda(
-                            Expression.Equal(
-                                Expression.Property(
-                                    Expression.Parameter(entityType.ClrType, "e"),
-                                    nameof(BaseEntity.IsDeleted)
-                                ),
-                                Expression.Constant(false)
-                            ),
-                            Expression.Parameter(entityType.ClrType, "e")
-                        )
-                    );
-                }
-            }
+            ConfigureTenant(modelBuilder);
+             
+            modelBuilder.ApplyConfigurationsFromAssembly(
+                Assembly.GetExecutingAssembly(),
+                t => t.Namespace != null && t.Namespace.Contains("MasterDb") &&
+                     t.Name != "TenantConfiguration"  
+            );
+             
+            ApplyGlobalQueryFilters(modelBuilder);
+
 
             // Seed data
             SeedMasterData(modelBuilder);
@@ -553,6 +547,173 @@ namespace StoockerMT.Persistence.Contexts
                 {
                     entity.UpdatedAt = DateTime.UtcNow;
                     // entity.UpdatedBy should be set by the service
+                }
+            }
+        }
+
+        private void ConfigureTenant(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Tenant>(entity =>
+            {
+                entity.ToTable("Tenants");
+                entity.HasKey(t => t.Id);
+
+                entity.Property(t => t.Name)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(t => t.Description)
+                    .HasMaxLength(1000);
+
+                entity.Property(t => t.Status)
+                    .HasConversion<int>()
+                    .IsRequired();
+
+                entity.Property(t => t.CreatedBy)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(t => t.UpdatedBy)
+                    .HasMaxLength(100);
+
+                entity.Property(t => t.CreatedAt)
+                    .IsRequired();
+
+                entity.Property(t => t.UpdatedAt);
+
+                entity.Property(t => t.MaxUsers)
+                    .HasDefaultValue(10)
+                    .IsRequired();
+
+                entity.Property(t => t.MaxStorageBytes)
+                    .HasDefaultValue(1073741824L)
+                    .IsRequired();
+
+                entity.Property(t => t.MaxModules)
+                    .HasDefaultValue(5)
+                    .IsRequired();
+
+                entity.Property(t => t.ActivatedDate);
+                entity.Property(t => t.DeactivatedDate);
+                entity.Property(t => t.DeactivationReason).HasMaxLength(500);
+
+                // Configure TenantCode as owned
+                entity.OwnsOne(t => t.Code, code =>
+                {
+                    code.WithOwner();
+
+                    code.Property(c => c.Value)
+                        .HasColumnName("Code")
+                        .IsRequired()
+                        .HasMaxLength(50);
+
+                    code.HasIndex(c => c.Value)
+                        .IsUnique()
+                        .HasDatabaseName("IX_Tenants_Code");
+                });
+
+                // Configure TenantSettings as owned
+                entity.OwnsOne(t => t.Settings, settings =>
+                {
+                    settings.WithOwner();
+
+                    settings.Property(s => s.TimeZone).HasColumnName("Settings_TimeZone").HasMaxLength(50);
+                    settings.Property(s => s.DateFormat).HasColumnName("Settings_DateFormat").HasMaxLength(20);
+                    settings.Property(s => s.TimeFormat).HasColumnName("Settings_TimeFormat").HasMaxLength(20);
+                    settings.Property(s => s.Language).HasColumnName("Settings_Language").HasMaxLength(10);
+                    settings.Property(s => s.Currency).HasColumnName("Settings_Currency").HasMaxLength(3);
+                    settings.Property(s => s.FiscalYearStartMonth).HasColumnName("Settings_FiscalYearStartMonth");
+                    settings.Property(s => s.FirstDayOfWeek).HasColumnName("Settings_FirstDayOfWeek");
+                    settings.Property(s => s.DefaultCountry).HasColumnName("Settings_DefaultCountry").HasMaxLength(100);
+                    settings.Property(s => s.DefaultCity).HasColumnName("Settings_DefaultCity").HasMaxLength(100);
+                    settings.Property(s => s.ThemeColor).HasColumnName("Settings_ThemeColor").HasMaxLength(10);
+                    settings.Property(s => s.LogoUrl).HasColumnName("Settings_LogoUrl").HasMaxLength(500);
+                    settings.Property(s => s.ItemsPerPage).HasColumnName("Settings_ItemsPerPage");
+                    settings.Property(s => s.ShowGridLines).HasColumnName("Settings_ShowGridLines");
+                    settings.Property(s => s.EmailNotificationsEnabled).HasColumnName("Settings_EmailNotificationsEnabled");
+                    settings.Property(s => s.SmsNotificationsEnabled).HasColumnName("Settings_SmsNotificationsEnabled");
+                    settings.Property(s => s.NotificationEmail).HasColumnName("Settings_NotificationEmail").HasMaxLength(256);
+                    settings.Property(s => s.PasswordMinLength).HasColumnName("Settings_PasswordMinLength");
+                    settings.Property(s => s.RequireTwoFactor).HasColumnName("Settings_RequireTwoFactor");
+                    settings.Property(s => s.SessionTimeoutMinutes).HasColumnName("Settings_SessionTimeoutMinutes");
+                    settings.Property(s => s.MaxLoginAttempts).HasColumnName("Settings_MaxLoginAttempts");
+                    settings.Property(s => s.ModuleSettingsJson).HasColumnName("Settings_ModuleSettingsJson").HasColumnType("nvarchar(max)");
+
+                    settings.Ignore(s => s.ModuleSettings);
+                });
+
+                // Configure DatabaseInfo as owned
+                entity.OwnsOne(t => t.DatabaseInfo, dbInfo =>
+                {
+                    dbInfo.WithOwner();
+
+                    dbInfo.Property(d => d.DatabaseName).HasColumnName("DB_Name").HasMaxLength(128);
+                    dbInfo.Property(d => d.Server).HasColumnName("DB_Server").HasMaxLength(256);
+                    dbInfo.Property(d => d.Username).HasColumnName("DB_Username").HasMaxLength(128);
+                    dbInfo.Property(d => d.EncryptedPassword).HasColumnName("DB_EncryptedPassword").HasMaxLength(512);
+                    dbInfo.Property(d => d.EncryptedConnectionString).HasColumnName("DB_EncryptedConnectionString").HasMaxLength(2048);
+                    dbInfo.Property(d => d.Port).HasColumnName("DB_Port").HasDefaultValue(1433);
+                    dbInfo.Property(d => d.UseWindowsAuthentication).HasColumnName("DB_UseWindowsAuth").HasDefaultValue(false);
+                    dbInfo.Property(d => d.Encrypt).HasColumnName("DB_Encrypt").HasDefaultValue(true);
+                    dbInfo.Property(d => d.TrustServerCertificate).HasColumnName("DB_TrustServerCert").HasDefaultValue(false);
+                    dbInfo.Property(d => d.ConnectionTimeout).HasColumnName("DB_ConnectionTimeout").HasDefaultValue(30);
+                    dbInfo.Property(d => d.CommandTimeout).HasColumnName("DB_CommandTimeout").HasDefaultValue(30);
+                    dbInfo.Property(d => d.ApplicationName).HasColumnName("DB_ApplicationName").HasMaxLength(128);
+                    dbInfo.Property(d => d.SizeInMB).HasColumnName("DB_SizeMB");
+                    dbInfo.Property(d => d.MaxSizeInMB).HasColumnName("DB_MaxSizeMB");
+                    dbInfo.Property(d => d.Collation).HasColumnName("DB_Collation").HasMaxLength(128).HasDefaultValue("SQL_Latin1_General_CP1_CI_AS");
+                    dbInfo.Property(d => d.RecoveryModel).HasColumnName("DB_RecoveryModel").HasMaxLength(20).HasDefaultValue("FULL");
+                    dbInfo.Property(d => d.CompatibilityLevel).HasColumnName("DB_CompatibilityLevel").HasMaxLength(10).HasDefaultValue("150");
+                    dbInfo.Property(d => d.CreatedDate).HasColumnName("DB_CreatedDate");
+                    dbInfo.Property(d => d.LastMigrationDate).HasColumnName("DB_LastMigrationDate");
+                    dbInfo.Property(d => d.LastBackupDate).HasColumnName("DB_LastBackupDate");
+                    dbInfo.Property(d => d.LastRestoreDate).HasColumnName("DB_LastRestoreDate");
+                    dbInfo.Property(d => d.LastHealthCheckDate).HasColumnName("DB_LastHealthCheckDate");
+                    dbInfo.Property(d => d.LastOptimizationDate).HasColumnName("DB_LastOptimizationDate");
+                    dbInfo.Property(d => d.SchemaVersion).HasColumnName("DB_SchemaVersion").HasMaxLength(50);
+
+                    dbInfo.Ignore(d => d.ActiveConnections);
+                    dbInfo.Ignore(d => d.CpuUsagePercent);
+                    dbInfo.Ignore(d => d.MemoryUsageMB);
+                    dbInfo.Ignore(d => d.DiskIOReadMBPerSec);
+                    dbInfo.Ignore(d => d.DiskIOWriteMBPerSec);
+                });
+
+                // Relationships
+                entity.HasMany(t => t.ModuleSubscriptions)
+                    .WithOne(s => s.Tenant)
+                    .HasForeignKey(s => s.TenantId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(t => t.Users)
+                    .WithOne(u => u.Tenant)
+                    .HasForeignKey(u => u.TenantId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(t => t.Invoices)
+                    .WithOne(i => i.Tenant)
+                    .HasForeignKey(i => i.TenantId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+        }
+
+        private void ApplyGlobalQueryFilters(ModelBuilder modelBuilder)
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (entityType.IsOwned())
+                    continue;
+
+                if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+                {
+                    var parameter = Expression.Parameter(entityType.ClrType, "e");
+                    var property = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
+                    var filter = Expression.Lambda(
+                        Expression.Equal(property, Expression.Constant(false)),
+                        parameter
+                    );
+
+                    modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
                 }
             }
         }

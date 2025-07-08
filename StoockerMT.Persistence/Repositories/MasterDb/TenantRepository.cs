@@ -78,7 +78,7 @@ namespace StoockerMT.Persistence.Repositories.MasterDb
                 query = query.Where(t => t.Id != excludeTenantId.Value);
             }
 
-            return !await query.AnyAsync(t => t.ConnectionString == connectionString, cancellationToken);
+            return !await query.AnyAsync(t => t.DatabaseInfo.GetDecryptedConnectionString() == connectionString, cancellationToken);
         }
     }
 }

@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using StoockerMT.Application.Common.Interfaces; 
+using StoockerMT.Application.Common.Interfaces;
+using StoockerMT.Application.Common.Interfaces.Services;
 using StoockerMT.Domain.Repositories.MasterDb;
 using StoockerMT.Domain.Repositories.TenantDb;
 using StoockerMT.Domain.Repositories.UnitOfWork;
@@ -111,6 +112,8 @@ namespace StoockerMT.Persistence
             // Unit of Work
             services.AddScoped<IMasterDbUnitOfWork, MasterDbUnitOfWork>();
             services.AddScoped<ITenantDbUnitOfWork, TenantDbUnitOfWork>();
+
+            services.AddScoped<ITenantService, TenantService>();
 
             return services;
         }

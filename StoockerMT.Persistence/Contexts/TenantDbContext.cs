@@ -191,8 +191,7 @@ namespace StoockerMT.Persistence.Contexts
                     IsDeleted = false
                 }
             );
-
-            // Seed Positions
+             
             modelBuilder.Entity<Position>().HasData(
                 new
                 {
@@ -293,8 +292,7 @@ namespace StoockerMT.Persistence.Contexts
                     IsDeleted = false
                 }
             );
-
-            // Seed Chart of Accounts - Without owned entities
+             
             modelBuilder.Entity<Account>().HasData(
                 // Assets
                 new
@@ -586,8 +584,7 @@ namespace StoockerMT.Persistence.Contexts
                     IsDeleted = false
                 }
             );
-
-            // Seed AccountCode value objects for Account
+             
             modelBuilder.Entity<Account>()
                 .OwnsOne(a => a.AccountCode)
                 .HasData(
@@ -612,8 +609,7 @@ namespace StoockerMT.Persistence.Contexts
                     new { AccountId = 19, Value = "5300" },
                     new { AccountId = 20, Value = "5400" }
                 );
-
-            // Seed Balance value objects for Account
+             
             modelBuilder.Entity<Account>()
                 .OwnsOne(a => a.Balance)
                 .HasData(

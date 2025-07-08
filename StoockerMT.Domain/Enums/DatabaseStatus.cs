@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 
 namespace StoockerMT.Domain.Enums
 {
-    public enum TenantStatus
+    public enum DatabaseStatus
     {
-        Active = 1,
-        Pending=2,
-        Inactive = 3,
-        Suspended = 4,
-        Terminated = 5
+        Creating,
+        Active,
+        Maintenance,
+        Deleted
     }
 }

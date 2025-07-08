@@ -551,25 +551,23 @@ namespace StoockerMT.Persistence.Migrations.MasterDb
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ConnectionString")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<DateTime?>("ActivatedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("DatabaseName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<DateTime?>("DeactivatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeactivationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
@@ -577,6 +575,11 @@ namespace StoockerMT.Persistence.Migrations.MasterDb
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<int>("MaxModules")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(5);
 
                     b.Property<long>("MaxStorageBytes")
                         .ValueGeneratedOnAdd()
@@ -592,9 +595,6 @@ namespace StoockerMT.Persistence.Migrations.MasterDb
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Settings")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -822,6 +822,9 @@ namespace StoockerMT.Persistence.Migrations.MasterDb
                     b.Property<DateTime?>("EmailVerifiedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("FailedLoginAttempts")
+                        .HasColumnType("int");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -833,10 +836,16 @@ namespace StoockerMT.Persistence.Migrations.MasterDb
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsTenantAdmin")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastLoginDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("LastName")
@@ -844,10 +853,22 @@ namespace StoockerMT.Persistence.Migrations.MasterDb
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PasswordChangeDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
@@ -1050,6 +1071,153 @@ namespace StoockerMT.Persistence.Migrations.MasterDb
 
             modelBuilder.Entity("StoockerMT.Domain.Entities.MasterDb.Tenant", b =>
                 {
+                    b.OwnsOne("StoockerMT.Domain.ValueObjects.DatabaseInfo", "DatabaseInfo", b1 =>
+                        {
+                            b1.Property<int>("TenantId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("ApplicationName")
+                                .IsRequired()
+                                .HasMaxLength(128)
+                                .HasColumnType("nvarchar(128)")
+                                .HasColumnName("DB_ApplicationName");
+
+                            b1.Property<string>("Collation")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(128)
+                                .HasColumnType("nvarchar(128)")
+                                .HasDefaultValue("SQL_Latin1_General_CP1_CI_AS")
+                                .HasColumnName("DB_Collation");
+
+                            b1.Property<int>("CommandTimeout")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int")
+                                .HasDefaultValue(30)
+                                .HasColumnName("DB_CommandTimeout");
+
+                            b1.Property<string>("CompatibilityLevel")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)")
+                                .HasDefaultValue("150")
+                                .HasColumnName("DB_CompatibilityLevel");
+
+                            b1.Property<int>("ConnectionTimeout")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int")
+                                .HasDefaultValue(30)
+                                .HasColumnName("DB_ConnectionTimeout");
+
+                            b1.Property<DateTime>("CreatedDate")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("DB_CreatedDate");
+
+                            b1.Property<string>("DatabaseName")
+                                .IsRequired()
+                                .HasMaxLength(128)
+                                .HasColumnType("nvarchar(128)")
+                                .HasColumnName("DB_Name");
+
+                            b1.Property<bool>("Encrypt")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bit")
+                                .HasDefaultValue(true)
+                                .HasColumnName("DB_Encrypt");
+
+                            b1.Property<string>("EncryptedConnectionString")
+                                .IsRequired()
+                                .HasMaxLength(2048)
+                                .HasColumnType("nvarchar(2048)")
+                                .HasColumnName("DB_EncryptedConnectionString");
+
+                            b1.Property<string>("EncryptedPassword")
+                                .IsRequired()
+                                .HasMaxLength(512)
+                                .HasColumnType("nvarchar(512)")
+                                .HasColumnName("DB_EncryptedPassword");
+
+                            b1.Property<DateTime?>("LastBackupDate")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("DB_LastBackupDate");
+
+                            b1.Property<DateTime?>("LastHealthCheckDate")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("DB_LastHealthCheckDate");
+
+                            b1.Property<DateTime?>("LastMigrationDate")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("DB_LastMigrationDate");
+
+                            b1.Property<DateTime?>("LastOptimizationDate")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("DB_LastOptimizationDate");
+
+                            b1.Property<DateTime?>("LastRestoreDate")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("DB_LastRestoreDate");
+
+                            b1.Property<int?>("MaxSizeInMB")
+                                .HasColumnType("int")
+                                .HasColumnName("DB_MaxSizeMB");
+
+                            b1.Property<int>("Port")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int")
+                                .HasDefaultValue(1433)
+                                .HasColumnName("DB_Port");
+
+                            b1.Property<string>("RecoveryModel")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasDefaultValue("FULL")
+                                .HasColumnName("DB_RecoveryModel");
+
+                            b1.Property<string>("SchemaVersion")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("DB_SchemaVersion");
+
+                            b1.Property<string>("Server")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)")
+                                .HasColumnName("DB_Server");
+
+                            b1.Property<long?>("SizeInMB")
+                                .HasColumnType("bigint")
+                                .HasColumnName("DB_SizeMB");
+
+                            b1.Property<bool>("TrustServerCertificate")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bit")
+                                .HasDefaultValue(false)
+                                .HasColumnName("DB_TrustServerCert");
+
+                            b1.Property<bool>("UseWindowsAuthentication")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bit")
+                                .HasDefaultValue(false)
+                                .HasColumnName("DB_UseWindowsAuth");
+
+                            b1.Property<string>("Username")
+                                .IsRequired()
+                                .HasMaxLength(128)
+                                .HasColumnType("nvarchar(128)")
+                                .HasColumnName("DB_Username");
+
+                            b1.HasKey("TenantId");
+
+                            b1.ToTable("Tenants");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantId");
+                        });
+
                     b.OwnsOne("StoockerMT.Domain.ValueObjects.TenantCode", "Code", b1 =>
                         {
                             b1.Property<int>("TenantId")
@@ -1073,8 +1241,130 @@ namespace StoockerMT.Persistence.Migrations.MasterDb
                                 .HasForeignKey("TenantId");
                         });
 
+                    b.OwnsOne("StoockerMT.Domain.ValueObjects.TenantSettings", "Settings", b1 =>
+                        {
+                            b1.Property<int>("TenantId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("nvarchar(3)")
+                                .HasColumnName("Settings_Currency");
+
+                            b1.Property<string>("DateFormat")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("Settings_DateFormat");
+
+                            b1.Property<string>("DefaultCity")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("Settings_DefaultCity");
+
+                            b1.Property<string>("DefaultCountry")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("Settings_DefaultCountry");
+
+                            b1.Property<bool>("EmailNotificationsEnabled")
+                                .HasColumnType("bit")
+                                .HasColumnName("Settings_EmailNotificationsEnabled");
+
+                            b1.Property<int>("FirstDayOfWeek")
+                                .HasColumnType("int")
+                                .HasColumnName("Settings_FirstDayOfWeek");
+
+                            b1.Property<int>("FiscalYearStartMonth")
+                                .HasColumnType("int")
+                                .HasColumnName("Settings_FiscalYearStartMonth");
+
+                            b1.Property<int>("ItemsPerPage")
+                                .HasColumnType("int")
+                                .HasColumnName("Settings_ItemsPerPage");
+
+                            b1.Property<string>("Language")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)")
+                                .HasColumnName("Settings_Language");
+
+                            b1.Property<string>("LogoUrl")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)")
+                                .HasColumnName("Settings_LogoUrl");
+
+                            b1.Property<int>("MaxLoginAttempts")
+                                .HasColumnType("int")
+                                .HasColumnName("Settings_MaxLoginAttempts");
+
+                            b1.Property<string>("ModuleSettingsJson")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("Settings_ModuleSettingsJson");
+
+                            b1.Property<string>("NotificationEmail")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)")
+                                .HasColumnName("Settings_NotificationEmail");
+
+                            b1.Property<int>("PasswordMinLength")
+                                .HasColumnType("int")
+                                .HasColumnName("Settings_PasswordMinLength");
+
+                            b1.Property<bool>("RequireTwoFactor")
+                                .HasColumnType("bit")
+                                .HasColumnName("Settings_RequireTwoFactor");
+
+                            b1.Property<int>("SessionTimeoutMinutes")
+                                .HasColumnType("int")
+                                .HasColumnName("Settings_SessionTimeoutMinutes");
+
+                            b1.Property<bool>("ShowGridLines")
+                                .HasColumnType("bit")
+                                .HasColumnName("Settings_ShowGridLines");
+
+                            b1.Property<bool>("SmsNotificationsEnabled")
+                                .HasColumnType("bit")
+                                .HasColumnName("Settings_SmsNotificationsEnabled");
+
+                            b1.Property<string>("ThemeColor")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)")
+                                .HasColumnName("Settings_ThemeColor");
+
+                            b1.Property<string>("TimeFormat")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("Settings_TimeFormat");
+
+                            b1.Property<string>("TimeZone")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("Settings_TimeZone");
+
+                            b1.HasKey("TenantId");
+
+                            b1.ToTable("Tenants");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantId");
+                        });
+
                     b.Navigation("Code")
                         .IsRequired();
+
+                    b.Navigation("DatabaseInfo");
+
+                    b.Navigation("Settings");
                 });
 
             modelBuilder.Entity("StoockerMT.Domain.Entities.MasterDb.TenantInvoice", b =>

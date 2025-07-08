@@ -11,36 +11,45 @@ namespace StoockerMT.Persistence.Repositories.Common
 {
     public abstract class UnitOfWork : IUnitOfWork
     {
-        protected readonly DbContext _context;
+        private readonly DbContext _context;
         private IDbContextTransaction? _currentTransaction;
+        private bool _disposed;
 
         protected UnitOfWork(DbContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public virtual async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             return await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
-        {
+        public virtual async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+        { 
             if (_currentTransaction != null)
             {
+                return;
+            }
+             
+            if (_context.Database.CurrentTransaction != null)
+            {
+                _currentTransaction = _context.Database.CurrentTransaction;
                 return;
             }
 
             _currentTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
         }
 
-        public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+        public virtual async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
         {
+            if (_currentTransaction == null) return;
+
             try
             {
                 await SaveChangesAsync(cancellationToken);
-
-                if (_currentTransaction != null)
+                 
+                if (_context.Database.CurrentTransaction?.TransactionId == _currentTransaction.TransactionId)
                 {
                     await _currentTransaction.CommitAsync(cancellationToken);
                 }
@@ -60,11 +69,13 @@ namespace StoockerMT.Persistence.Repositories.Common
             }
         }
 
-        public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+        public virtual async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
         {
+            if (_currentTransaction == null) return;
+
             try
             {
-                if (_currentTransaction != null)
+                if (_context.Database.CurrentTransaction?.TransactionId == _currentTransaction.TransactionId)
                 {
                     await _currentTransaction.RollbackAsync(cancellationToken);
                 }
@@ -81,7 +92,21 @@ namespace StoockerMT.Persistence.Repositories.Common
 
         public void Dispose()
         {
-            _context.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _currentTransaction?.Dispose();
+                    _context?.Dispose();
+                }
+                _disposed = true;
+            }
         }
     }
 }
