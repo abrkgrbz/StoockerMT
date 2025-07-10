@@ -10,7 +10,7 @@ namespace StoockerMT.Domain.Specifications.Tenant
 {
     public class ActiveTenantSpecification : Specification<Entities.MasterDb.Tenant>
     {
-        public override Expression<Func<Entities.MasterDb.Tenant, bool>> ToExpression()
+        public   Expression<Func<Entities.MasterDb.Tenant, bool>> ToExpression()
         {
             return tenant => tenant.Status == TenantStatus.Active;
         }

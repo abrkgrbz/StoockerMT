@@ -1,11 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using StoockerMT.Domain.Repositories.UnitOfWork;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace StoockerMT.Persistence.Repositories.Common
 {
@@ -26,16 +21,25 @@ namespace StoockerMT.Persistence.Repositories.Common
         }
 
         public virtual async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
-        { 
+        {
             if (_currentTransaction != null)
             {
                 return;
             }
-             
+
             if (_context.Database.CurrentTransaction != null)
             {
                 _currentTransaction = _context.Database.CurrentTransaction;
                 return;
+            }
+
+            // Check if retry strategy is enabled
+            var executionStrategy = _context.Database.CreateExecutionStrategy();
+            if (executionStrategy.RetriesOnFailure)
+            {
+                throw new InvalidOperationException(
+                    "Cannot begin a transaction when retry execution strategy is enabled. " +
+                    "Use ExecuteInTransactionAsync method instead.");
             }
 
             _currentTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
@@ -48,7 +52,7 @@ namespace StoockerMT.Persistence.Repositories.Common
             try
             {
                 await SaveChangesAsync(cancellationToken);
-                 
+
                 if (_context.Database.CurrentTransaction?.TransactionId == _currentTransaction.TransactionId)
                 {
                     await _currentTransaction.CommitAsync(cancellationToken);
@@ -88,6 +92,45 @@ namespace StoockerMT.Persistence.Repositories.Common
                     _currentTransaction = null;
                 }
             }
+        }
+         
+        public virtual async Task<T> ExecuteInTransactionAsync<T>(
+            Func<CancellationToken, Task<T>> operation,
+            CancellationToken cancellationToken = default)
+        { 
+            var strategy = _context.Database.CreateExecutionStrategy();
+             
+            return await strategy.ExecuteAsync(async (ct) =>
+            { 
+                await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+
+                try
+                { 
+                    var result = await operation(ct);
+                     
+                    await _context.SaveChangesAsync(ct);
+                     
+                    await transaction.CommitAsync(ct);
+
+                    return result;
+                }
+                catch (Exception ex)
+                { 
+                    await transaction.RollbackAsync(ct);
+                    throw;
+                }
+            }, cancellationToken);
+        }
+         
+        public virtual async Task ExecuteInTransactionAsync(
+            Func<CancellationToken, Task> operation,
+            CancellationToken cancellationToken = default)
+        { 
+            await ExecuteInTransactionAsync(async (ct) =>
+            {
+                await operation(ct);
+                return Task.FromResult(0);  
+            }, cancellationToken);
         }
 
         public void Dispose()

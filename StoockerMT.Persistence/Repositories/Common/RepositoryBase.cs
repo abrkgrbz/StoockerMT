@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoockerMT.Domain.Repositories;
 using StoockerMT.Domain.Specifications;
+using StoockerMT.Persistence.Specifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -79,34 +80,41 @@ namespace StoockerMT.Persistence.Repositories.Common
             _dbSet.RemoveRange(entities);
         }
 
-        protected IQueryable<T> ApplySpecification(IQueryable<T> query, Expression<Func<T, bool>> criteria)
+
+        public virtual async Task<IReadOnlyList<T>> FindAsync(Specification<T> specification, CancellationToken cancellationToken = default)
         {
-            return query.Where(criteria);
+            return await ApplySpecification(specification).ToListAsync(cancellationToken);
         }
 
-        public Task<IReadOnlyList<T>> FindAsync(Specification<T> specification, CancellationToken cancellationToken = default)
+        public virtual async Task<T> FirstOrDefaultAsync(Specification<T> specification, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return await ApplySpecification(specification).FirstOrDefaultAsync(cancellationToken);
         }
 
-        public Task<T> FirstOrDefaultAsync(Specification<T> specification, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> AnyAsync(Specification<T> specification, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return await ApplySpecification(specification).AnyAsync(cancellationToken);
         }
 
-        public Task<bool> AnyAsync(Specification<T> specification, CancellationToken cancellationToken = default)
+        public virtual async Task<int> CountAsync(Specification<T> specification, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<int> CountAsync(Specification<T> specification, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
+            return await ApplySpecification(specification).CountAsync(cancellationToken);
         }
 
         public IQueryable<T> GetQueryable()
         {
             return _dbSet.AsQueryable();
+        }
+
+        // Protected helper methods
+        protected IQueryable<T> ApplySpecification(Specification<T> specification)
+        {
+            return SpecificationEvaluator<T>.GetQuery(_dbSet.AsQueryable(), specification);
+        }
+
+        protected IQueryable<T> ApplySpecification(IQueryable<T> query, Expression<Func<T, bool>> criteria)
+        {
+            return query.Where(criteria);
         }
     }
 }

@@ -17,7 +17,7 @@ namespace StoockerMT.Domain.Specifications.Tenant
             _moduleId = moduleId;
         }
 
-        public override Expression<Func<Entities.MasterDb.Tenant, bool>> ToExpression()
+        public   Expression<Func<Entities.MasterDb.Tenant, bool>> ToExpression()
         {
             return tenant => tenant.ModuleSubscriptions.Any(s =>
                 s.ModuleId == _moduleId &&

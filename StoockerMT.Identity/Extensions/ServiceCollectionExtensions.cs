@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using StoockerMT.Application.Features.Authentication.DTOs;
 using StoockerMT.Application.Common.Interfaces;
-using StoockerMT.Persistence.Services;
+using StoockerMT.Application.Common.Interfaces.Services;
 
 namespace StoockerMT.Identity.Extensions
 {
@@ -21,8 +21,8 @@ namespace StoockerMT.Identity.Extensions
     {
         public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddHttpContextAccessor();
-            // Configuration
+            services.AddHttpContextAccessor(); 
+
             var jwtSettings = new JwtSettings();
             configuration.GetSection(JwtSettings.SectionName).Bind(jwtSettings);
             services.AddSingleton(jwtSettings);
@@ -31,15 +31,12 @@ namespace StoockerMT.Identity.Extensions
             configuration.GetSection(IdentityConfiguration.SectionName).Bind(identityConfig);
             services.AddSingleton(identityConfig);
 
-            // Services
-            services.AddScoped<ICurrentUserService, CurrentUserService>();
-            services.AddScoped<ICurrentTenantService, CurrentTenantService>();
+            // Services 
             services.AddScoped<ITokenService, JwtTokenService>();
             services.AddScoped<IPasswordService, PasswordService>();
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
-
-            // JWT Authentication
+             
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -62,8 +59,7 @@ namespace StoockerMT.Identity.Extensions
                     ClockSkew = TimeSpan.Zero
                 };
             });
-
-            // Authorization policies
+             
             services.AddAuthorization(options =>
             {
                 // Default policy requires authenticated user
@@ -90,5 +86,9 @@ namespace StoockerMT.Identity.Extensions
 
             return services;
         }
+
+        
+
+
     }
 }

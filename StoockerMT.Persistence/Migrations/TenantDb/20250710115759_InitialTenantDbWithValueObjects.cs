@@ -3,12 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
-namespace StoockerMT.Persistence.Persistence.Migrations.TenantDb
+namespace StoockerMT.Persistence.Migrations.TenantDb
 {
     /// <inheritdoc />
-    public partial class InitialTenantCreate : Migration
+    public partial class InitialTenantDbWithValueObjects : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -508,70 +506,6 @@ namespace StoockerMT.Persistence.Persistence.Migrations.TenantDb
                         principalTable: "Employees",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.InsertData(
-                table: "Accounts",
-                columns: new[] { "Id", "AccountName", "CreatedAt", "CreatedBy", "Description", "IsActive", "IsDeleted", "ParentAccountId", "Type", "UpdatedAt", "UpdatedBy", "BalanceCurrency", "AccountCode" },
-                values: new object[,]
-                {
-                    { 1, "Cash", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 1, null, null, "USD", "1000" },
-                    { 2, "Accounts Receivable", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 1, null, null, "USD", "1200" },
-                    { 3, "Inventory", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 1, null, null, "USD", "1300" },
-                    { 4, "Equipment", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 1, null, null, "USD", "1500" },
-                    { 5, "Accumulated Depreciation", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 1, null, null, "USD", "1510" },
-                    { 6, "Accounts Payable", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 2, null, null, "USD", "2000" },
-                    { 7, "Accrued Expenses", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 2, null, null, "USD", "2100" },
-                    { 8, "Notes Payable", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 2, null, null, "USD", "2200" },
-                    { 9, "Unearned Revenue", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 2, null, null, "USD", "2300" },
-                    { 10, "Owner's Equity", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 3, null, null, "USD", "3000" },
-                    { 11, "Retained Earnings", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 3, null, null, "USD", "3100" },
-                    { 12, "Dividends", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 3, null, null, "USD", "3200" },
-                    { 13, "Sales Revenue", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 4, null, null, "USD", "4000" },
-                    { 14, "Service Revenue", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 4, null, null, "USD", "4100" },
-                    { 15, "Interest Revenue", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 4, null, null, "USD", "4200" },
-                    { 16, "Cost of Goods Sold", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 5, null, null, "USD", "5000" },
-                    { 17, "Salary Expense", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 5, null, null, "USD", "5100" },
-                    { 18, "Rent Expense", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 5, null, null, "USD", "5200" },
-                    { 19, "Utilities Expense", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 5, null, null, "USD", "5300" },
-                    { 20, "Depreciation Expense", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, null, 5, null, null, "USD", "5400" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Departments",
-                columns: new[] { "Id", "CreatedAt", "CreatedBy", "DepartmentName", "Description", "IsActive", "IsDeleted", "ManagerId", "UpdatedAt", "UpdatedBy" },
-                values: new object[,]
-                {
-                    { 1, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, "Sales", "Sales department", true, false, null, null, null },
-                    { 2, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, "Marketing", "Marketing department", true, false, null, null, null },
-                    { 3, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, "IT", "Information Technology department", true, false, null, null, null },
-                    { 4, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, "HR", "Human Resources department", true, false, null, null, null },
-                    { 5, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, "Finance", "Finance department", true, false, null, null, null }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Positions",
-                columns: new[] { "Id", "CreatedAt", "CreatedBy", "Description", "IsActive", "IsDeleted", "MaxSalary", "MinSalary", "Title", "UpdatedAt", "UpdatedBy" },
-                values: new object[,]
-                {
-                    { 1, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, 80000m, 50000m, "Sales Manager", null, null },
-                    { 2, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, 50000m, 30000m, "Sales Representative", null, null },
-                    { 3, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, 85000m, 55000m, "Marketing Manager", null, null },
-                    { 4, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, 100000m, 60000m, "Software Developer", null, null },
-                    { 5, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, 75000m, 50000m, "HR Manager", null, null },
-                    { 6, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, 65000m, 40000m, "Accountant", null, null },
-                    { 7, new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, null, true, false, 90000m, 60000m, "Finance Manager", null, null }
-                });
-
-            migrationBuilder.InsertData(
-                table: "ProductCategories",
-                columns: new[] { "Id", "CategoryName", "CreatedAt", "CreatedBy", "Description", "IsActive", "IsDeleted", "ParentCategoryId", "UpdatedAt", "UpdatedBy" },
-                values: new object[,]
-                {
-                    { 1, "Electronics", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, "Electronic products and accessories", true, false, null, null, null },
-                    { 2, "Clothing", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, "Clothing and fashion items", true, false, null, null, null },
-                    { 3, "Books", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, "Books and publications", true, false, null, null, null },
-                    { 4, "Home & Garden", new DateTime(2025, 7, 5, 0, 0, 0, 0, DateTimeKind.Utc), null, "Home and garden products", true, false, null, null, null }
                 });
 
             migrationBuilder.CreateIndex(

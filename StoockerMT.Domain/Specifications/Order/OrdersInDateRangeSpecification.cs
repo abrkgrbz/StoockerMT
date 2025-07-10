@@ -18,7 +18,7 @@ namespace StoockerMT.Domain.Specifications.Order
             _endDate = endDate;
         }
 
-        public override Expression<Func<Entities.TenantDb.Order, bool>> ToExpression()
+        public   Expression<Func<Entities.TenantDb.Order, bool>> ToExpression()
         {
             return order => order.OrderDate >= _startDate && order.OrderDate <= _endDate;
         }

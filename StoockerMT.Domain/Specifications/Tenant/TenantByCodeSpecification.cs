@@ -16,7 +16,7 @@ namespace StoockerMT.Domain.Specifications.Tenant
             _code = code;
         }
 
-        public override Expression<Func<Entities.MasterDb.Tenant, bool>> ToExpression()
+        public   Expression<Func<Entities.MasterDb.Tenant, bool>> ToExpression()
         {
             return tenant => tenant.Code.Value == _code;
         }

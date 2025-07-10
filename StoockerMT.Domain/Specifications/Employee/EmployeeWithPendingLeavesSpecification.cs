@@ -10,7 +10,7 @@ namespace StoockerMT.Domain.Specifications.Employee
 {
     public class EmployeeWithPendingLeavesSpecification : Specification<Entities.TenantDb.Employee>
     {
-        public override Expression<Func<Entities.TenantDb.Employee, bool>> ToExpression()
+        public   Expression<Func<Entities.TenantDb.Employee, bool>> ToExpression()
         {
             return employee => employee.Leaves.Any(l => l.Status == LeaveStatus.Pending);
         }

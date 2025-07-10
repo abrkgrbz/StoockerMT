@@ -10,7 +10,7 @@ namespace StoockerMT.Domain.Specifications.Domain
 {
     public class LowStockProductSpecification : Specification<Product>
     {
-        public override Expression<Func<Product, bool>> ToExpression()
+        public   Expression<Func<Product, bool>> ToExpression()
         {
             return product => product.StockQuantity.Value <= product.MinimumStockLevel.Value;
         }

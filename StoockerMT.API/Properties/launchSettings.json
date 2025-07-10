@@ -16,15 +16,12 @@
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7249;http://localhost:5132"
     },
-    "Container (Dockerfile)": {
-      "commandName": "Docker",
-      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+    "Docker": {
+      "commandName": "Project",
       "environmentVariables": {
-        "ASPNETCORE_HTTPS_PORTS": "8081",
-        "ASPNETCORE_HTTP_PORTS": "8080"
+        "ASPNETCORE_ENVIRONMENT": "Docker"
       },
-      "publishAllPorts": true,
-      "useSSL": true
+      "applicationUrl": "http://+:80"
     },
     "IIS Express": {
       "commandName": "IISExpress",
@@ -32,7 +29,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
-    }
+    } 
   },
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "iisSettings": {

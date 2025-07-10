@@ -1,0 +1,192 @@
+ 
+services:
+  # SQL Server
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: stoockermt_sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Password123
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./backup:/var/opt/mssql/backup
+    networks:
+      - stoockermt_network
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourStrong@Password123", "-Q", "SELECT 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: stoockermt_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - stoockermt_network
+    command: redis-server --appendonly yes --requirepass YourRedisPassword
+
+  # RabbitMQ (for future message queue)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: stoockermt_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - stoockermt_network
+
+  # Elasticsearch (for logging)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: stoockermt_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - stoockermt_network
+
+  # Kibana (for log visualization)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: stoockermt_kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - stoockermt_network
+    depends_on:
+      - elasticsearch
+
+  # Prometheus (for metrics)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: stoockermt_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - stoockermt_network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+  # Grafana (for metrics visualization)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: stoockermt_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - stoockermt_network
+    depends_on:
+      - prometheus
+
+  # Jaeger (for distributed tracing)
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: stoockermt_jaeger
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14250:14250"
+      - "14268:14268"
+      - "14269:14269"
+      - "9411:9411"
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+    networks:
+      - stoockermt_network
+
+  # StoockerMT API
+  stoockermt-api:
+    build:
+      context: .
+      dockerfile: StoockerMT.API/Dockerfile
+    container_name: stoockermt_api
+    ports:
+      - "5000:5000"  # HTTP 
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - ConnectionStrings__MasterConnection=Server=sqlserver;Database=StoockerMT_MasterDB;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;
+      - ConnectionStrings__TenantConnection=Server=sqlserver;Database=StoockerMT_TenantDB;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
+      - Redis__ConnectionString=redis:6379,password=YourRedisPassword
+      - ElasticSearch__Uri=http://elasticsearch:9200
+      - RabbitMQ__Host=rabbitmq
+      - Jaeger__AgentHost=jaeger
+      - Jaeger__AgentPort=6831
+    depends_on:
+      - sqlserver
+      - redis
+      - rabbitmq
+      - elasticsearch
+    networks:
+      - stoockermt_network
+    volumes:
+      - ./logs:/app/logs
+      - ./keys:/app/keys
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # NGINX Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: stoockermt_nginx
+    ports:
+      - "81:81"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - stoockermt-api
+    networks:
+      - stoockermt_network
+
+volumes:
+  sqlserver_data:
+  redis_data:
+  rabbitmq_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  stoockermt_network:
+    driver: bridge

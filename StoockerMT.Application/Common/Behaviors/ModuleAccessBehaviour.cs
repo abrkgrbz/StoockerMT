@@ -34,7 +34,7 @@ namespace StoockerMT.Application.Common.Behaviors
 
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            if (!_currentTenantService.HasTenant || _currentTenantService.TenantId == null)
+            if (!_currentTenantService.HasTenant() || _currentTenantService.TenantId == null)
             {
                 throw new UnauthorizedAccessException("No tenant context found");
             }
@@ -52,8 +52,7 @@ namespace StoockerMT.Application.Common.Behaviors
             {
                 throw new ModuleNotSubscribedException(_currentTenantService.TenantId.Value, module.Id);
             }
-
-            // TODO: Check user permissions for the module
+             
 
             return await next();
         }

@@ -18,6 +18,7 @@ namespace StoockerMT.Persistence.Contexts
     {
         public TenantDbContext(DbContextOptions<TenantDbContext> options) : base(options) { }
 
+         
         // Tenant Database Tables
         public DbSet<Customer> Customers { get; set; }
         public DbSet<CustomerContact> CustomerContacts { get; set; }
@@ -38,9 +39,10 @@ namespace StoockerMT.Persistence.Contexts
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly(), t => t.Namespace.Contains("TenantDb"));
-
+            modelBuilder.ApplyConfigurationsFromAssembly(
+                Assembly.GetExecutingAssembly(),
+                t => t.Namespace != null && t.Namespace.Contains("TenantDb")
+            );
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
@@ -60,7 +62,7 @@ namespace StoockerMT.Persistence.Contexts
                 }
             }
 
-            // Seed data
+            //// Seed data
             SeedTenantData(modelBuilder);
         }
 

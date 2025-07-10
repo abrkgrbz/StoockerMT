@@ -1,24 +1,108 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using StoockerMT.Domain.Entities.Common;
-using StoockerMT.Domain.Entities.TenantDb.Common;
 
 namespace StoockerMT.Domain.Specifications
 {
     public abstract class Specification<T>
     {
-        public abstract Expression<Func<T, bool>> ToExpression();
+        protected Specification() { }
 
-        public bool IsSatisfiedBy(T entity)
+        // Core specification
+        public Expression<Func<T, bool>> Criteria { get; protected set; }
+
+        // Include specifications
+        public List<Expression<Func<T, object>>> Includes { get; } = new();
+        public List<string> IncludeStrings { get; } = new();
+
+        // Ordering specifications
+        public Expression<Func<T, object>> OrderBy { get; private set; }
+        public Expression<Func<T, object>> OrderByDescending { get; private set; }
+        public List<Expression<Func<T, object>>> ThenByList { get; } = new();
+        public List<Expression<Func<T, object>>> ThenByDescendingList { get; } = new();
+
+        // Paging specifications
+        public int Take { get; private set; }
+        public int Skip { get; private set; }
+        public bool IsPagingEnabled { get; private set; }
+
+        // Tracking specifications
+        public bool AsNoTracking { get; private set; } = true;
+        public bool AsSplitQuery { get; private set; }
+        public bool AsNoTrackingWithIdentityResolution { get; private set; }
+
+        // Caching
+        public bool CacheEnabled { get; private set; }
+        public string CacheKey { get; private set; }
+        public TimeSpan? CacheDuration { get; private set; }
+
+        // Methods for building specifications
+        protected virtual void AddInclude(Expression<Func<T, object>> includeExpression)
         {
-            var predicate = ToExpression().Compile();
-            return predicate(entity);
+            Includes.Add(includeExpression);
         }
 
+        protected virtual void AddInclude(string includeString)
+        {
+            IncludeStrings.Add(includeString);
+        }
+
+        protected virtual void ApplyPaging(int skip, int take)
+        {
+            Skip = skip;
+            Take = take;
+            IsPagingEnabled = true;
+        }
+
+        protected virtual void ApplyOrderBy(Expression<Func<T, object>> orderByExpression)
+        {
+            OrderBy = orderByExpression;
+        }
+
+        protected virtual void ApplyOrderByDescending(Expression<Func<T, object>> orderByDescendingExpression)
+        {
+            OrderByDescending = orderByDescendingExpression;
+        }
+
+        protected virtual void ApplyThenBy(Expression<Func<T, object>> thenByExpression)
+        {
+            ThenByList.Add(thenByExpression);
+        }
+
+        protected virtual void ApplyThenByDescending(Expression<Func<T, object>> thenByDescendingExpression)
+        {
+            ThenByDescendingList.Add(thenByDescendingExpression);
+        }
+
+        protected virtual void ApplyNoTracking()
+        {
+            AsNoTracking = true;
+        }
+
+        protected virtual void ApplyTracking()
+        {
+            AsNoTracking = false;
+        }
+
+        protected virtual void ApplySplitQuery()
+        {
+            AsSplitQuery = true;
+        }
+
+        protected virtual void ApplyNoTrackingWithIdentityResolution()
+        {
+            AsNoTrackingWithIdentityResolution = true;
+            AsNoTracking = false;
+        }
+
+        protected virtual void EnableCache(string cacheKey, TimeSpan? duration = null)
+        {
+            CacheEnabled = true;
+            CacheKey = cacheKey;
+            CacheDuration = duration ?? TimeSpan.FromMinutes(5);
+        }
+
+        // Specification composition
         public Specification<T> And(Specification<T> specification)
         {
             return new AndSpecification<T>(this, specification);
@@ -34,74 +118,127 @@ namespace StoockerMT.Domain.Specifications
             return new NotSpecification<T>(this);
         }
 
-        public class AndSpecification<T> : Specification<T>
+        public virtual bool IsSatisfiedBy(T entity)
         {
-            private readonly Specification<T> _left;
-            private readonly Specification<T> _right;
+            var predicate = Criteria?.Compile();
+            return predicate?.Invoke(entity) ?? true;
+        }
+    }
+     
+    public sealed class AndSpecification<T> : Specification<T>
+    {
+        private readonly Specification<T> _left;
+        private readonly Specification<T> _right;
 
-            public AndSpecification(Specification<T> left, Specification<T> right)
+        public AndSpecification(Specification<T> left, Specification<T> right)
+        {
+            _left = left;
+            _right = right;
+
+            // Combine criteria
+            if (_left.Criteria != null && _right.Criteria != null)
             {
-                _left = left;
-                _right = right;
+                Criteria = _left.Criteria.And(_right.Criteria);
+            }
+            else if (_left.Criteria != null)
+            {
+                Criteria = _left.Criteria;
+            }
+            else if (_right.Criteria != null)
+            {
+                Criteria = _right.Criteria;
             }
 
-            public override Expression<Func<T, bool>> ToExpression()
+            // Combine includes
+            Includes.AddRange(_left.Includes);
+            Includes.AddRange(_right.Includes);
+            IncludeStrings.AddRange(_left.IncludeStrings);
+            IncludeStrings.AddRange(_right.IncludeStrings);
+        }
+    }
+
+    public sealed class OrSpecification<T> : Specification<T>
+    {
+        private readonly Specification<T> _left;
+        private readonly Specification<T> _right;
+
+        public OrSpecification(Specification<T> left, Specification<T> right)
+        {
+            _left = left;
+            _right = right;
+
+            if (_left.Criteria != null && _right.Criteria != null)
             {
-                var leftExpression = _left.ToExpression();
-                var rightExpression = _right.ToExpression();
-
-                var parameter = Expression.Parameter(typeof(T));
-                var body = Expression.AndAlso(
-                    Expression.Invoke(leftExpression, parameter),
-                    Expression.Invoke(rightExpression, parameter)
-                );
-
-                return Expression.Lambda<Func<T, bool>>(body, parameter);
+                Criteria = _left.Criteria.Or(_right.Criteria);
+            }
+            else if (_left.Criteria != null)
+            {
+                Criteria = _left.Criteria;
+            }
+            else if (_right.Criteria != null)
+            {
+                Criteria = _right.Criteria;
             }
         }
+    }
 
-        public class OrSpecification<T> : Specification<T>
+    public sealed class NotSpecification<T> : Specification<T>
+    {
+        public NotSpecification(Specification<T> specification)
         {
-            private readonly Specification<T> _left;
-            private readonly Specification<T> _right;
-
-            public OrSpecification(Specification<T> left, Specification<T> right)
+            if (specification.Criteria != null)
             {
-                _left = left;
-                _right = right;
-            }
-
-            public override Expression<Func<T, bool>> ToExpression()
-            {
-                var leftExpression = _left.ToExpression();
-                var rightExpression = _right.ToExpression();
-
-                var parameter = Expression.Parameter(typeof(T));
-                var body = Expression.OrElse(
-                    Expression.Invoke(leftExpression, parameter),
-                    Expression.Invoke(rightExpression, parameter)
-                );
-
-                return Expression.Lambda<Func<T, bool>>(body, parameter);
+                Criteria = specification.Criteria.Not();
             }
         }
+    }
 
-        public class NotSpecification<T> : Specification<T>
+    public static class ExpressionExtensions
+    {
+        public static Expression<Func<T, bool>> And<T>(
+            this Expression<Func<T, bool>> first,
+            Expression<Func<T, bool>> second)
         {
-            private readonly Specification<T> _specification;
+            var parameter = Expression.Parameter(typeof(T));
+            var combined = new ParameterReplacer(parameter).Visit(
+                Expression.AndAlso(
+                    first.Body,
+                    second.Body));
+            return Expression.Lambda<Func<T, bool>>(combined, parameter);
+        }
 
-            public NotSpecification(Specification<T> specification)
+        public static Expression<Func<T, bool>> Or<T>(
+            this Expression<Func<T, bool>> first,
+            Expression<Func<T, bool>> second)
+        {
+            var parameter = Expression.Parameter(typeof(T));
+            var combined = new ParameterReplacer(parameter).Visit(
+                Expression.OrElse(
+                    first.Body,
+                    second.Body));
+            return Expression.Lambda<Func<T, bool>>(combined, parameter);
+        }
+
+        public static Expression<Func<T, bool>> Not<T>(
+            this Expression<Func<T, bool>> expression)
+        {
+            var parameter = Expression.Parameter(typeof(T));
+            var not = Expression.Not(expression.Body);
+            return Expression.Lambda<Func<T, bool>>(not, parameter);
+        }
+
+        private class ParameterReplacer : ExpressionVisitor
+        {
+            private readonly ParameterExpression _parameter;
+
+            public ParameterReplacer(ParameterExpression parameter)
             {
-                _specification = specification;
+                _parameter = parameter;
             }
 
-            public override Expression<Func<T, bool>> ToExpression()
+            protected override Expression VisitParameter(ParameterExpression node)
             {
-                var expression = _specification.ToExpression();
-                var parameter = Expression.Parameter(typeof(T));
-                var body = Expression.Not(Expression.Invoke(expression, parameter));
-
-                return Expression.Lambda<Func<T, bool>>(body, parameter);
+                return _parameter;
             }
         }
     }

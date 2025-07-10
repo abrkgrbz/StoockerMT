@@ -23,7 +23,7 @@ namespace StoockerMT.Application.Common.Behaviors
 
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
-            if (!_currentTenantService.HasTenant || _currentTenantService.TenantId == null)
+            if (!_currentTenantService.HasTenant() || _currentTenantService.TenantId == null)
             {
                 throw new TenantNotFoundException("No tenant context found");
             }

@@ -10,7 +10,7 @@ namespace StoockerMT.Domain.Specifications.Order
 {
     public class PendingOrdersSpecification : Specification<Entities.TenantDb.Order>
     {
-        public override Expression<Func<Entities.TenantDb.Order, bool>> ToExpression()
+        public   Expression<Func<Entities.TenantDb.Order, bool>> ToExpression()
         {
             return order => order.Status == OrderStatus.Pending ||
                             order.Status == OrderStatus.Confirmed;

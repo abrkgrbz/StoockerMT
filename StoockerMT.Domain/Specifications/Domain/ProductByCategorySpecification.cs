@@ -17,7 +17,7 @@ namespace StoockerMT.Domain.Specifications.Domain
             _categoryId = categoryId;
         }
 
-        public override Expression<Func<Product, bool>> ToExpression()
+        public   Expression<Func<Product, bool>> ToExpression()
         {
             return product => product.CategoryId == _categoryId;
         }

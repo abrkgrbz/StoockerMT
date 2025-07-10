@@ -20,7 +20,7 @@ namespace StoockerMT.Domain.Specifications.Domain
             _maxPrice = maxPrice;
         }
 
-        public override Expression<Func<Product, bool>> ToExpression()
+        public   Expression<Func<Product, bool>> ToExpression()
         {
             return product =>
                 product.IsActive &&

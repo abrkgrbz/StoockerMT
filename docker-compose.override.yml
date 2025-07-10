@@ -1,0 +1,19 @@
+ 
+services:
+  
+  # Development tools
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - stoockermt_network
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - stoockermt_network

@@ -11,20 +11,30 @@
 **/*.*proj.user
 **/*.dbmdl
 **/*.jfm
-**/azds.yaml
 **/bin
 **/charts
 **/docker-compose*
+**/compose*
 **/Dockerfile*
 **/node_modules
 **/npm-debug.log
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
+**/build
+**/dist
 LICENSE
 README.md
-!**/.gitignore
-!.git/HEAD
-!.git/config
-!.git/packed-refs
-!.git/refs/heads/**
+
+# Ignore test results
+**/TestResults/
+**/test-results/
+
+# Ignore logs
+**/logs/
+*.log
+
+# Ignore temporary files
+*.tmp
+*.temp
+.DS_Store
