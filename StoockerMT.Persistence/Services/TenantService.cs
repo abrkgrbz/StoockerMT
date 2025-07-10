@@ -36,8 +36,22 @@ namespace StoockerMT.Persistence.Services
             _configuration = configuration;
             _logger = logger;
             _encryptionService = encryptionService;
-            _masterConnectionString = Configuration.ConnectionStringMasterDb;
-            _backupPath = configuration["BackupSettings:Path"] ?? @"C:\Backups";
+            // Get connection string from configuration
+            _masterConnectionString = configuration.GetConnectionString("MasterConnection");
+
+            // Fallback to static Configuration if needed
+            if (string.IsNullOrEmpty(_masterConnectionString))
+            {
+                _masterConnectionString = Configuration.ConnectionStringMasterDb;
+            }
+
+            if (string.IsNullOrEmpty(_masterConnectionString))
+            {
+                throw new InvalidOperationException("Master connection string is not configured");
+            }
+
+            _backupPath = configuration["BackupSettings:Path"] ??
+                          (Configuration.IsRunningInDocker() ? "/app/backups" : @"C:\Backups");
         }
 
         public async Task<string> CreateTenantDatabaseAsync(int tenantId, string tenantCode, CancellationToken cancellationToken = default)
@@ -49,38 +63,30 @@ namespace StoockerMT.Persistence.Services
                 _logger.LogInformation("Creating database for tenant {TenantId} with code {TenantCode}", tenantId, tenantCode);
 
                 return await _masterDbUnitOfWork.ExecuteInTransactionAsync(async (ct) =>
-                {
-                    // Get tenant
+                { 
                     var tenant = await _masterDbUnitOfWork.Tenants.GetByIdAsync(tenantId, ct);
                     if (tenant == null)
                     {
                         throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
                     }
-
-                    // Verify tenant code
+                     
                     if (tenant.Code.Value != tenantCode)
                     {
                         throw new InvalidOperationException($"Tenant code mismatch. Expected: {tenant.Code.Value}, Provided: {tenantCode}");
-                    }
-
-                    // Check if database already exists
+                    } 
                     if (await DatabaseExistsAsync(databaseName, ct))
                     {
                         throw new InvalidOperationException($"Database {databaseName} already exists");
                     }
-
-                    // Create database (outside of EF transaction)
+                     
                     await CreateDatabaseAsync(databaseName, ct);
-
-                    // Create database user
+                     
                     var (username, password) = await CreateDatabaseUserAsync(databaseName, tenantCode, ct);
-
-                    // Build connection string
+                     
                     var connectionString = BuildTenantConnectionString(databaseName, username, password);
                     var encryptedPassword = await _encryptionService.EncryptAsync(password);
                     var encryptedConnectionString = await _encryptionService.EncryptAsync(connectionString);
-
-                    // Create DatabaseInfo
+                     
                     var databaseInfo = DatabaseInfo.Create(
                         databaseName: databaseName,
                         server: _configuration["DatabaseSettings:Server"] ?? "localhost",
@@ -98,8 +104,7 @@ namespace StoockerMT.Persistence.Services
                         recoveryModel: _configuration["DatabaseSettings:RecoveryModel"] ?? "FULL",
                         compatibilityLevel: _configuration["DatabaseSettings:CompatibilityLevel"] ?? "150"
                     );
-
-                    // Update tenant
+                     
                     tenant.SetDatabaseInfo(databaseInfo);
 
                     if (tenant.Settings == null)
@@ -146,8 +151,7 @@ namespace StoockerMT.Persistence.Services
                     _logger.LogWarning("No database found for tenant {TenantId}", tenantId);
                     return false;
                 }
-
-                // Decrypt connection string securely
+                 
                 var encryptedConnectionString = tenant.DatabaseInfo.EncryptedConnectionString;
                 var decryptedConnectionString = await _encryptionService.DecryptAsync(encryptedConnectionString);
                 var modifiedConnectionString = ForceSSLSettings(decryptedConnectionString);
@@ -194,37 +198,31 @@ namespace StoockerMT.Persistence.Services
                     _logger.LogWarning("No database found for tenant {TenantId}", tenantId);
                     return false;
                 }
-
-                // Create a backup before deletion (safety measure)
+                 
                 var backupCreated = await BackupTenantDatabaseAsync(tenantId, cancellationToken);
                 if (!backupCreated)
                 {
                     _logger.LogWarning("Could not create backup before deletion. Proceeding with caution.");
                 }
-
-                // Deactivate all subscriptions
+                 
                 var subscriptions = await _masterDbUnitOfWork.Subscriptions.GetByTenantAsync(tenantId, cancellationToken);
                 foreach (var subscription in subscriptions)
                 {
                     subscription.Cancel("Database deletion");
                     _masterDbUnitOfWork.Subscriptions.Update(subscription);
                 }
-
-                // Close all connections to the database
+                 
                 await CloseAllConnectionsAsync(tenant.DatabaseInfo.DatabaseName, cancellationToken);
-
-                // Drop the database
+                 
                 await DropDatabaseAsync(tenant.DatabaseInfo.DatabaseName, cancellationToken);
-
-                // Drop the login
+                 
                 var decryptedConnectionString = await _encryptionService.DecryptAsync(tenant.DatabaseInfo.EncryptedConnectionString);
                 var username = ExtractUsernameFromConnectionString(decryptedConnectionString);
                 if (!string.IsNullOrEmpty(username))
                 {
                     await DropLoginAsync(username, cancellationToken);
                 }
-
-                // Update tenant status
+                 
                 tenant.Deactivate("Database deleted");
                 tenant.ClearDatabaseInfo();
 
@@ -456,29 +454,73 @@ namespace StoockerMT.Persistence.Services
 
         private async Task CreateDatabaseAsync(string databaseName, CancellationToken cancellationToken)
         {
-            var dataPath = _configuration["DatabaseSettings:DataPath"] ?? @"C:\SQLData";
-            var logPath = _configuration["DatabaseSettings:LogPath"] ?? @"C:\SQLLogs";
+            //var dataPath = _configuration["DatabaseSettings:DataPath"] ?? @"C:\SQLData";
+            //var logPath = _configuration["DatabaseSettings:LogPath"] ?? @"C:\SQLLogs";
 
-            var sql = $@"
-                CREATE DATABASE [{databaseName}]
-                CONTAINMENT = NONE
-                ON PRIMARY 
-                (
-                    NAME = N'{databaseName}', 
-                    FILENAME = N'{Path.Combine(dataPath, $"{databaseName}.mdf")}',
-                    SIZE = 10MB, 
-                    MAXSIZE = UNLIMITED, 
-                    FILEGROWTH = 10MB
-                )
-                LOG ON 
-                (
-                    NAME = N'{databaseName}_log', 
-                    FILENAME = N'{Path.Combine(logPath, $"{databaseName}_log.ldf")}',
-                    SIZE = 5MB, 
-                    MAXSIZE = 1GB, 
-                    FILEGROWTH = 10%
-                )
-                COLLATE SQL_Latin1_General_CP1_CI_AS";
+            //var sql = $@"
+            //    CREATE DATABASE [{databaseName}]
+            //    CONTAINMENT = NONE
+            //    ON PRIMARY 
+            //    (
+            //        NAME = N'{databaseName}', 
+            //        FILENAME = N'{Path.Combine(dataPath, $"{databaseName}.mdf")}',
+            //        SIZE = 10MB, 
+            //        MAXSIZE = UNLIMITED, 
+            //        FILEGROWTH = 10MB
+            //    )
+            //    LOG ON 
+            //    (
+            //        NAME = N'{databaseName}_log', 
+            //        FILENAME = N'{Path.Combine(logPath, $"{databaseName}_log.ldf")}',
+            //        SIZE = 5MB, 
+            //        MAXSIZE = 1GB, 
+            //        FILEGROWTH = 10%
+            //    )
+            //    COLLATE SQL_Latin1_General_CP1_CI_AS";
+
+            //using var connection = new SqlConnection(_masterConnectionString);
+            //await connection.OpenAsync(cancellationToken);
+
+            //using var command = new SqlCommand(sql, connection);
+            //await command.ExecuteNonQueryAsync(cancellationToken);
+            // Docker ortamında mı çalışıyor kontrol et
+            var isDocker = Configuration.IsRunningInDocker();
+
+            // SQL Server'ın default path'lerini kullan
+            var sql = $@"CREATE DATABASE [{databaseName}]";
+
+            // Eğer özel path belirtmek istersek (opsiyonel)
+            if (!isDocker)
+            {
+                // Local development için özel path kullanabilirsiniz
+                var dataPath = _configuration["DatabaseSettings:DataPath"] ?? @"C:\SQLData";
+                var logPath = _configuration["DatabaseSettings:LogPath"] ?? @"C:\SQLLogs";
+
+                // Path'lerin var olduğunu kontrol et
+                if (Directory.Exists(dataPath) && Directory.Exists(logPath))
+                {
+                    sql = $@"
+                        CREATE DATABASE [{databaseName}]
+                        CONTAINMENT = NONE
+                        ON PRIMARY 
+                        (
+                            NAME = N'{databaseName}', 
+                            FILENAME = N'{Path.Combine(dataPath, $"{databaseName}.mdf")}',
+                            SIZE = 10MB, 
+                            MAXSIZE = UNLIMITED, 
+                            FILEGROWTH = 10MB
+                        )
+                        LOG ON 
+                        (
+                            NAME = N'{databaseName}_log', 
+                            FILENAME = N'{Path.Combine(logPath, $"{databaseName}_log.ldf")}',
+                            SIZE = 5MB, 
+                            MAXSIZE = 1GB, 
+                            FILEGROWTH = 10%
+                        )
+                        COLLATE SQL_Latin1_General_CP1_CI_AS";
+                }
+            }
 
             using var connection = new SqlConnection(_masterConnectionString);
             await connection.OpenAsync(cancellationToken);

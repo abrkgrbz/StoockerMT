@@ -58,12 +58,12 @@ namespace StoockerMT.Persistence
             return services;
         }
         private static IServiceCollection AddTenantServices(this IServiceCollection services)
-        {
+        { 
             services.AddScoped<ITenantResolver, TenantResolver>();
-
-            services.AddScoped<CurrentTenantService>();
-            services.AddScoped<ICurrentTenantService>(sp => sp.GetRequiredService<CurrentTenantService>());
-            services.AddScoped<ICurrentUserService>(sp => sp.GetRequiredService<CurrentTenantService>());
+             
+            services.AddScoped<ICurrentTenantService, CurrentTenantService>();
+             
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
 
             return services;
         }

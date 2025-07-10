@@ -9,7 +9,7 @@ using StoockerMT.Domain.ValueObjects;
 
 namespace StoockerMT.Persistence.Services
 {
-    public class CurrentTenantService : ICurrentTenantService, ICurrentUserService
+    public class CurrentTenantService : ICurrentTenantService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITenantResolver _tenantResolver;
@@ -68,15 +68,6 @@ namespace StoockerMT.Persistence.Services
         public string UserEmail => _currentUser?.Email?.Value;
         public bool IsTenantAdmin => _currentUser?.IsTenantAdmin ?? false;
 
-        // ICurrentUserService implementation
-        string ICurrentUserService.UserId => UserId?.ToString();
-
-        public string? UserName => throw new NotImplementedException();
-
-        public string? Email => throw new NotImplementedException();
-
-        bool ICurrentUserService.IsAuthenticated => throw new NotImplementedException();
-
         // Tenant Resolution Methods
         public async Task<bool> SetTenantAsync(string tenantIdentifier)
         {
@@ -96,8 +87,8 @@ namespace StoockerMT.Persistence.Services
                 }
 
                 _currentTenant = tenant;
-                _connectionString = null;  
-                 
+                _connectionString = null;
+
                 await LoadCurrentUserAsync();
 
                 _logger.LogInformation("Tenant {TenantCode} set successfully", tenant.Code.Value);
@@ -157,7 +148,7 @@ namespace StoockerMT.Persistence.Services
 
             return true;
         }
-         
+
         public bool HasTenant()
         {
             return _currentTenant != null;
@@ -178,10 +169,10 @@ namespace StoockerMT.Persistence.Services
 
             if (_currentUser == null)
                 return false;
-             
+
             return _currentUser.TenantId == _currentTenant.Id && _currentUser.IsActive;
         }
-         
+
         private async Task LoadCurrentUserAsync()
         {
             if (!IsAuthenticated() || _currentTenant == null)
@@ -211,7 +202,7 @@ namespace StoockerMT.Persistence.Services
                 _logger.LogError(ex, "Error loading current user");
             }
         }
-         
+
         public async Task InitializeAsync()
         {
             var httpContext = _httpContextAccessor.HttpContext;

@@ -138,8 +138,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5000
       - DOTNET_RUNNING_IN_CONTAINER=true
-      - ConnectionStrings__MasterConnection=Server=sqlserver;Database=StoockerMT_MasterDB;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;
-      - ConnectionStrings__TenantConnection=Server=sqlserver;Database=StoockerMT_TenantDB;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;
+      - ConnectionStrings__MasterConnection=Server=sqlserver;Database=StoockerMT_Master;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;
+      - ConnectionStrings__TenantConnection=Server=sqlserver;Database=StoockerMT_Tenant_{0};User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;;
       - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
       - Redis__ConnectionString=redis:6379,password=YourRedisPassword
       - ElasticSearch__Uri=http://elasticsearch:9200

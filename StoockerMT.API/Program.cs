@@ -8,25 +8,25 @@ using StoockerMT.Infrastructure;
 using StoockerMT.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
-//builder.Configuration
-//    .SetBasePath(Directory.GetCurrentDirectory())
-//    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-//    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-//    .AddJsonFile("appsettings.Docker.json", optional: true, reloadOnChange: true)
-//    .AddEnvironmentVariables(); 
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddJsonFile("appsettings.Docker.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
-//builder.WebHost.ConfigureKestrel(options =>
-//{ 
-//    options.ListenAnyIP(5000);
-     
-//    if (!builder.Environment.IsEnvironment("Docker") && !IsRunningInDocker())
-//    {
-//        options.ListenAnyIP(443, listenOptions =>
-//        {
-//            listenOptions.UseHttps();
-//        });
-//    }
-//});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5000);
+
+    if (!builder.Environment.IsEnvironment("Docker") && !IsRunningInDocker())
+    {
+        options.ListenAnyIP(443, listenOptions =>
+        {
+            listenOptions.UseHttps();
+        });
+    }
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();  
