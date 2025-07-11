@@ -21,6 +21,14 @@ namespace StoockerMT.Persistence.Repositories.MasterDb
             _context = context;
         }
 
+        public async Task<IEnumerable<Module>> GetByCodesAsync(IEnumerable<string> codes, CancellationToken cancellationToken = default)
+        {
+            
+            return await _context.Modules
+                .Where(m => codes.Contains(m.Code))
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<Module?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
         {
             return await _context.Modules

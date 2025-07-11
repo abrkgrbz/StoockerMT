@@ -1,5 +1,8 @@
-using Microsoft.AspNetCore.HttpsPolicy;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using Asp.Versioning; 
 using StoockerMT.API.Extensions;
+using StoockerMT.API.Middleware;
 using StoockerMT.Application;
 using StoockerMT.Identity;
 using StoockerMT.Identity.Extensions;
@@ -27,12 +30,38 @@ builder.WebHost.ConfigureKestrel(options =>
         });
     }
 });
+ 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+ 
+builder.Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+        options.ApiVersionReader = ApiVersionReader.Combine(
+            new UrlSegmentApiVersionReader(),
+            new HeaderApiVersionReader("X-Api-Version"),
+            new QueryStringApiVersionReader("api-version"),
+            new MediaTypeApiVersionReader("v")
+        );
+    })
+    .AddMvc()  
+    .AddApiExplorer(options =>
+    {
+        // Version format: 'v'major[.minor][-status]
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();  
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(c =>
-{ 
+{
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -66,34 +95,63 @@ builder.Services.AddHealthChecksExtension();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowSpecificOrigins", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(
+                builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ??
+                new[] { "http://localhost:3000" })
+            .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowAnyHeader();
+            .AllowCredentials();
     });
 });
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
+        httpContext => RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+
+    options.AddPolicy("Api", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: httpContext.User.Identity?.Name ?? httpContext.Request.Headers.Host.ToString(),
+        factory: partition => new FixedWindowRateLimiterOptions
+        {
+            AutoReplenishment = true,
+            PermitLimit = 30,
+            Window = TimeSpan.FromSeconds(60)
+        }));
+});
+
 var app = builder.Build();
- 
-if (app.Environment.IsDevelopment()  )
-{ 
+
+
+app.UseGlobalExceptionHandling();
+if (app.Environment.IsDevelopment())
+{
     app.UseSwagger();
     app.UseSwaggerUI();
     app.MapOpenApi();
 }
 
 
-app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseHttpsRedirection(); 
+app.UseCors("AllowSpecificOrigins");
+app.UseRateLimiter();
 
 app.TenantMiddlewareExtensions();
 
 app.UseJwtMiddleware();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+app.MapControllers().RequireRateLimiting("Api");
+
 app.UseHealthChecksExtension();
- 
+
 app.Run();
 bool IsRunningInDocker()
 {

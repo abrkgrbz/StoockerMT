@@ -42,11 +42,9 @@ namespace StoockerMT.Domain.Entities.MasterDb
         public virtual ICollection<TenantModuleSubscription> ModuleSubscriptions { get; private set; } = new List<TenantModuleSubscription>();
         public virtual ICollection<TenantUser> Users { get; private set; } = new List<TenantUser>();
         public virtual ICollection<TenantInvoice> Invoices { get; private set; } = new List<TenantInvoice>();
-
-        // Private constructor for EF Core
+         
         private Tenant() { }
-
-        // Public constructor for creating new tenant
+         
         public Tenant(string name, TenantCode code, string createdBy, string? description = null)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -59,8 +57,7 @@ namespace StoockerMT.Domain.Entities.MasterDb
             // Initialize with default settings
             Settings = TenantSettings.CreateDefault();
         }
-
-        // Database Management
+         
         public void SetDatabaseInfo(DatabaseInfo databaseInfo)
         {
             DatabaseInfo = databaseInfo ?? throw new ArgumentNullException(nameof(databaseInfo));
@@ -72,15 +69,13 @@ namespace StoockerMT.Domain.Entities.MasterDb
             DatabaseInfo = null;
             UpdateTimestamp();
         }
-
-        // Settings Management
+         
         public void UpdateSettings(TenantSettings settings)
         {
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
             UpdateTimestamp();
         }
-
-        // Basic Information Updates
+         
         public void UpdateName(string name, string updatedBy)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -94,8 +89,7 @@ namespace StoockerMT.Domain.Entities.MasterDb
             UpdatedBy = updatedBy;
             UpdateTimestamp();
         }
-
-        // Limits Management
+         
         public void UpdateLimits(int? maxUsers = null, long? maxStorageBytes = null, int? maxModules = null, string updatedBy = null)
         {
             if (maxUsers.HasValue)
@@ -124,8 +118,7 @@ namespace StoockerMT.Domain.Entities.MasterDb
 
             UpdateTimestamp();
         }
-
-        // Status Management
+         
         public void Activate(string updatedBy)
         {
             if (Status == TenantStatus.Terminated)
@@ -174,8 +167,7 @@ namespace StoockerMT.Domain.Entities.MasterDb
             UpdatedBy = updatedBy;
             UpdateTimestamp();
         }
-
-        // Module Subscription Management
+         
         public void AddModuleSubscription(TenantModuleSubscription subscription)
         {
             if (subscription == null)

@@ -10,6 +10,7 @@ namespace StoockerMT.Domain.Repositories.MasterDb
 {
     public interface IModuleRepository : IRepository<Module>
     {
+        Task<IEnumerable<Module>> GetByCodesAsync(IEnumerable<string> codes, CancellationToken cancellationToken = default);
         Task<Module?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
         Task<Module?> GetWithPermissionsAsync(int id, CancellationToken cancellationToken = default);
         Task<Module?> GetWithFeaturesAsync(int id, CancellationToken cancellationToken = default);

@@ -9,6 +9,7 @@ namespace StoockerMT.Domain.Enums
     public enum SubscriptionType
     {
         Monthly = 1,
-        Yearly = 2
+        Yearly = 2,
+        Free = 3,
     }
 }

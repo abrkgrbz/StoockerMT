@@ -392,5 +392,7 @@ namespace StoockerMT.Domain.ValueObjects
         {
             return $"{Server}:{Port}/{DatabaseName} ({Username ?? "Windows Auth"})";
         }
+
+         
     }
 }

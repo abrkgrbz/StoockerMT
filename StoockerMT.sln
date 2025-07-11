@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoockerMT.Identity", "Stoo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{6A368245-56F0-4BFF-8131-9F4C13860264}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoockerMT.Domain.Tests", "StoockerMT.Domain.Tests\StoockerMT.Domain.Tests.csproj", "{1A10C574-CB72-492B-9059-0342A603CB3A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -65,6 +67,10 @@ Global
 		{A2DC44C9-618F-4578-920F-B4796AAB9F4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2DC44C9-618F-4578-920F-B4796AAB9F4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2DC44C9-618F-4578-920F-B4796AAB9F4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A10C574-CB72-492B-9059-0342A603CB3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A10C574-CB72-492B-9059-0342A603CB3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A10C574-CB72-492B-9059-0342A603CB3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A10C574-CB72-492B-9059-0342A603CB3A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,6 +86,7 @@ Global
 		{CA75F18A-06F8-4651-9C7F-9F865A17FDC0} = {BB52CDD8-04EA-48CE-979E-1F9897A73B44}
 		{D7619B3F-DFBA-442A-943D-CF67CFF21966} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{A2DC44C9-618F-4578-920F-B4796AAB9F4E} = {2DB274CA-C4B2-4616-80EA-C731BA297195}
+		{1A10C574-CB72-492B-9059-0342A603CB3A} = {2D9193D5-0FCD-47AC-8450-A8E3E44ADF6F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8898E050-B710-4B04-BB52-71B828FAFDC0}
